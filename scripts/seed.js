@@ -1,11 +1,9 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 
 const Category = require('../src/models/Category');
 const Product = require('../src/models/Product');
-const User = require('../src/models/User');
 const Order = require('../src/models/Order');
 
 async function seed() {
@@ -15,7 +13,6 @@ async function seed() {
   await Promise.all([
     Category.deleteMany({}),
     Product.deleteMany({}),
-    User.deleteMany({}),
     Order.deleteMany({}),
   ]);
   console.log('[seed] Colecciones limpiadas');
@@ -73,19 +70,10 @@ async function seed() {
     },
   ]);
 
-  const hashedAdmin = await bcrypt.hash('Admin123!', 10);
-  const hashedCustomer = await bcrypt.hash('Cliente123!', 10);
-
-  const users = await User.insertMany([
-    { name: 'Admin Agencia01', email: 'admin@agencia01.test', password: hashedAdmin, role: 'admin' },
-    { name: 'Cliente Testing', email: 'cliente@agencia01.test', password: hashedCustomer, role: 'customer' },
-  ]);
-
-  const [admin, cliente] = users;
-
   await Order.insertMany([
     {
-      user: cliente._id,
+      customerName: 'Cliente Testing',
+      customerEmail: 'cliente@agencia01.test',
       items: [
         { product: products[0]._id, quantity: 1, unitPrice: products[0].price },
         { product: products[3]._id, quantity: 2, unitPrice: products[3].price },
@@ -99,7 +87,6 @@ async function seed() {
   console.log('[seed] Datos de testing insertados:');
   console.log(`  - ${categories.length} categorías`);
   console.log(`  - ${products.length} productos`);
-  console.log(`  - ${users.length} usuarios (admin@agencia01.test / cliente@agencia01.test)`);
   console.log('  - 1 orden de ejemplo');
 
   await mongoose.disconnect();

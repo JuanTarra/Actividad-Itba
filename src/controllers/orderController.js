@@ -9,7 +9,11 @@ const DISCOUNT_CODES = {
 
 async function createOrder(req, res, next) {
   try {
-    const { items, discountCode } = req.body;
+    const { customerName, customerEmail, items, discountCode } = req.body;
+
+    if (!customerName || !customerEmail) {
+      return res.status(400).json({ error: 'customerName y customerEmail son requeridos' });
+    }
 
     if (!items || !items.length) {
       return res.status(400).json({ error: 'La orden debe tener al menos un item' });
@@ -41,7 +45,8 @@ async function createOrder(req, res, next) {
     }
 
     const order = await Order.create({
-      user: req.user._id,
+      customerName,
+      customerEmail,
       items: orderItems,
       discountCode: discountCode || null,
       total,
@@ -55,7 +60,8 @@ async function createOrder(req, res, next) {
 
 async function listOrders(req, res, next) {
   try {
-    const filter = req.user.role === 'admin' ? {} : { user: req.user._id };
+    const { email } = req.query;
+    const filter = email ? { customerEmail: email.toLowerCase() } : {};
     const orders = await Order.find(filter).populate('items.product', 'name price');
     res.json({ data: orders });
   } catch (err) {
